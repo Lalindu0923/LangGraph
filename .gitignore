@@ -4,3 +4,21 @@
 
 # LangGraph
 .langgraph_api/
+
+# Secrets and environment files
+.env
+.env.*
+!.env.example
+
+# Python virtual environments
+venv/
+.venv/
+
+# Python cache/artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Tooling folders
+.qodo/
