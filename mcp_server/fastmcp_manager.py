@@ -1,38 +1,31 @@
-"""Simple battery status provider using psutil."""
-
 import psutil
 from langchain_core.tools import tool
 
 
 class MCPManager:
-    """Provides laptop battery data for the MCP node."""
+    """Backward-compatible manager used by MCP node code paths."""
 
     async def get_all_workers_system_stats(self) -> str:
-        """Return battery percentage and charging state."""
-        try:
-            battery = psutil.sensors_battery()
-            if battery is None:
-                return "Battery information is not available on this device."
-
-            plugged = "Plugged in" if battery.power_plugged else "On battery"
-            return f"Battery: {battery.percent:.0f}% ({plugged})"
-        except Exception as exc:
-            return f"Error reading battery information: {exc}"
+        """Return battery information in the previous MCP stats contract."""
+        return get_battery_status.invoke({})
 
 
-# Global manager instance used by langgraph_api.nodes.mcp_node
+# Keep global `mcp` for compatibility with existing imports.
 mcp = MCPManager()
 
-
-# Battery tool that LLM can call
+# Tool exposed to LangGraph/LangChain.
 @tool
 def get_battery_status() -> str:
     """Get the laptop battery percentage and charging status."""
     try:
         battery = psutil.sensors_battery()
+
         if battery is None:
-            return "Battery information is not available on this device."
+            return "Battery info not available."
+
         plugged = "Plugged in" if battery.power_plugged else "On battery"
-        return f"Battery: {battery.percent:.0f}% ({plugged})"
-    except Exception as exc:
-        return f"Error reading battery information: {exc}"
+
+        return f"🔋 Battery: {battery.percent}% ({plugged})"
+
+    except Exception as e:
+        return f"Error: {str(e)}"

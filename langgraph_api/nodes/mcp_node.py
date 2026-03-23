@@ -1,6 +1,5 @@
 # langgraph_api/nodes/mcp_node.py
 from mcp_server.fastmcp_manager import mcp
-from langgraph.graph.message import Message
 
 async def mcp_node(state):
     """
@@ -10,6 +9,6 @@ async def mcp_node(state):
     
     return {
         "messages": [
-            Message(type="ai", content=f"MCP Workers Status:\n{workers_stats}")
+            ("ai", f"MCP Workers Status:\n{workers_stats}")
         ]
     }

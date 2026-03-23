@@ -1,5 +1,4 @@
-# langgraph_api/nodes/__init__.py
-"""LangGraph nodes module."""
+"""Node package for local graph nodes."""
 
 from .mcp_node import mcp_node
 

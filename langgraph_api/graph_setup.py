@@ -1,6 +1,8 @@
 # langgraph_api/graph_setup.py
 
 from typing import Annotated
+from pathlib import Path
+import sys
 from typing_extensions import TypedDict
 from dotenv import load_dotenv
 
@@ -11,7 +13,14 @@ from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
 
 # MCP NODE
-from langgraph_api.nodes.mcp_node import mcp_node
+# Support both package-style imports and direct file loading by LangGraph.
+try:
+    from .nodes.mcp_node import mcp_node
+except Exception:
+    current_dir = Path(__file__).resolve().parent
+    if str(current_dir) not in sys.path:
+        sys.path.insert(0, str(current_dir))
+    from nodes.mcp_node import mcp_node
 from mcp_server.fastmcp_manager import get_battery_status
 
 # Load env
@@ -37,13 +46,17 @@ def multiply(a: float, b: float) -> float:
     return a * b
 
 @tool
-def divide(a: float, b: float):
+def divide(a: float, b: float) -> float:
     """Divides number 'a' by number 'b'."""
     if b == 0:
         return "Error: Division by zero is not allowed."
     return a / b
 
-tools = [add, multiply, divide, get_battery_status]
+def subtract(a: float, b: float) -> float:
+    """Subtracts number 'b' from number 'a'."""
+    return a - b
+
+tools = [add, multiply, divide, subtract]
 
 # ==============================
 # 3. LLM
@@ -64,7 +77,7 @@ def router(state: State):
     if "hi" in latest_message or "hello" in latest_message:
         return "hi"
 
-    elif "worker" in latest_message or "mcp" in latest_message:
+    if "battery" in latest_message or "charge" in latest_message:
         return "mcp"
 
     return "chatbot"
@@ -81,7 +94,7 @@ tool_node = ToolNode(tools=tools)
 def hi_node(state: State):
     return {
         "messages": [
-            ("ai", "Hello! How can I assist you today? ❤️")
+            ("ai", "Hello! How can I assist you today? ====❤️")
         ]
     }
 
@@ -102,8 +115,8 @@ graph_builder.add_conditional_edges(
     router,
     {
         "hi": "Hi_Node",
-        "chatbot": "chatbot",
-        "mcp": "MCP_Node"
+        "mcp": "MCP_Node",
+        "chatbot": "chatbot"
     }
 )
 
@@ -116,7 +129,7 @@ graph_builder.add_conditional_edges(
 # Back edges
 graph_builder.add_edge("tools", "chatbot")
 graph_builder.add_edge("Hi_Node", END)
-graph_builder.add_edge("MCP_Node", END)
+graph_builder.add_edge("MCP_Node", END )
 
 # Compile graph
 graph = graph_builder.compile()

@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from langgraph_api import graph, State  # import compiled graph and State
+from langgraph_api.graph_setup import graph, State
 
 app = FastAPI()
 
